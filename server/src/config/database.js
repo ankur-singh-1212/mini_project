@@ -1,5 +1,4 @@
 import mongoose from "mongoose";
-import { MongoMemoryServer } from "mongodb-memory-server";
 
 let memoryServer = null;
 
@@ -11,6 +10,7 @@ export async function connectDatabase(uri) {
   }
   // Development/test convenience: in-memory MongoDB when no URI is configured.
   if (process.env.NODE_ENV !== "production") {
+    const { MongoMemoryServer } = await import("mongodb-memory-server");
     memoryServer = await MongoMemoryServer.create();
     const memUri = memoryServer.getUri();
     await mongoose.connect(memUri, { autoIndex: true });
