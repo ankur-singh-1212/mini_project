@@ -26,6 +26,8 @@ jobs:
       - name: Build
         run: npm run build
         working-directory: client
+      - name: Create 404 fallback
+        run: cp client/dist/index.html client/dist/404.html
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
