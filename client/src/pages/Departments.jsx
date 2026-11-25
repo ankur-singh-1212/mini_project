@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Building2, PlusCircle, Trash2 } from "lucide-react";
 import api from "../services/api";
 import { useToast } from "../context/ToastContext";
+import { useSubmit } from "../hooks/useSubmit";
 import PageHeader from "../components/PageHeader";
 import Spinner from "../components/Spinner";
 import EmptyState from "../components/EmptyState";
@@ -29,8 +30,7 @@ export default function Departments() {
     load();
   }, []);
 
-  const create = async (e) => {
-    e.preventDefault();
+  const { submitting: creating, slowHint, submit: create } = useSubmit(async () => {
     if (!name.trim()) return;
     try {
       await api.post("/admin/departments", { name: name.trim(), description: description.trim() });
@@ -41,9 +41,9 @@ export default function Departments() {
     } catch (err) {
       push({ type: "error", title: "Failed", message: err.response?.data?.message });
     }
-  };
+  });
 
-  const remove = async () => {
+  const { submitting: removing, submit: remove } = useSubmit(async () => {
     if (!toDelete) return;
     try {
       await api.delete(`/admin/departments/${toDelete}`);
@@ -53,7 +53,7 @@ export default function Departments() {
     } catch (err) {
       push({ type: "error", title: "Failed", message: err.response?.data?.message });
     }
-  };
+  });
 
   return (
     <div className="page">
@@ -90,8 +90,11 @@ export default function Departments() {
                 onChange={(e) => setDescription(e.target.value)}
               />
             </div>
-            <button className="btn btn-primary w-full" type="submit">Create department</button>
+            <button className="btn btn-primary w-full" type="submit" disabled={creating}>
+              {creating ? "Please wait…" : "Create department"}
+            </button>
           </form>
+          {slowHint && <p className="text-xs text-warning-600">Server start ho raha hai, thoda ruko…</p>}
         </div>
 
         <div className="card card--padded">
@@ -113,8 +116,9 @@ export default function Departments() {
                   <button
                     className="btn btn-danger-soft btn-sm self-start"
                     onClick={() => setToDelete(d)}
+                    disabled={removing}
                   >
-                    <Trash2 size={14} /> Remove
+                    <Trash2 size={14} /> {removing ? "Please wait…" : "Remove"}
                   </button>
                 </div>
               ))}

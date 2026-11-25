@@ -9,6 +9,7 @@ import PriorityBadge from "../components/PriorityBadge";
 import Spinner from "../components/Spinner";
 import EmptyState from "../components/EmptyState";
 import Pagination from "../components/Pagination";
+import { useSubmit } from "../hooks/useSubmit";
 
 const STATUSES = [
   "Submitted",
@@ -87,7 +88,7 @@ export default function ComplaintManagement() {
   const resetFilters = () =>
     setFilters({ q: "", status: "", category: "", priority: "", department: "", from: "", to: "", sort: "-createdAt", page: 1 });
 
-  const assign = async (c, agentId) => {
+  const { submitting: assigning, submit: assign } = useSubmit(async (c, agentId) => {
     try {
       await api.post(`/complaints/${c._id}/assign`, { agentId: agentId || null });
       push({ type: "success", title: "Assignment updated" });
@@ -95,7 +96,7 @@ export default function ComplaintManagement() {
     } catch (err) {
       push({ type: "error", title: "Assignment failed", message: err.response?.data?.message });
     }
-  };
+  });
 
   return (
     <div className="page">
@@ -230,8 +231,9 @@ export default function ComplaintManagement() {
                     <select
                       className="select py-1 text-xs"
                       value={c.assignedAgent?._id || ""}
-                      onChange={(e) => assign(c, e.target.value)}
+                      onChange={(e) => assign(e, c, e.target.value)}
                       aria-label={`Assign ${c.complaintId}`}
+                      disabled={assigning}
                     >
                       <option value="">Unassigned</option>
                       {agents.map((a) => (

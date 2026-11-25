@@ -167,7 +167,7 @@ export default function AppLayout() {
   const renderNav = (mobile) =>
     groups.map((g) => (
       <div key={g.label}>
-        <div className="px-3 mb-2 text-[10px] font-semibold uppercase tracking-wider text-navy-400">
+        <div className="px-3 mb-2 text-[10px] font-semibold uppercase tracking-wider text-navy-200">
           {g.label}
         </div>
         <div className="space-y-1">
@@ -207,7 +207,7 @@ export default function AppLayout() {
         {!collapsed && (
           <button
             onClick={() => setCollapsed(true)}
-            className="text-navy-400 hover:text-white rounded-lg p-1.5"
+            className="text-navy-200 hover:text-white rounded-lg p-1.5"
             aria-label="Collapse sidebar"
           >
             <ChevronLeft size={16} />

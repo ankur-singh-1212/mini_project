@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { Eye, EyeOff, GraduationCap, Loader2 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { useToast } from "../context/ToastContext";
+import { useSubmit } from "../hooks/useSubmit";
 import { AuthScreen } from "./Login";
 
 export default function Register() {
@@ -10,14 +11,12 @@ export default function Register() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [show, setShow] = useState(false);
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const { register } = useAuth();
   const { push } = useToast();
   const navigate = useNavigate();
 
-  const submit = async (e) => {
-    e.preventDefault();
+  const { submitting, slowHint, submit } = useSubmit(async () => {
     setError("");
     if (name.trim().length < 2) {
       setError("Enter your full name (at least 2 characters).");
@@ -27,7 +26,6 @@ export default function Register() {
       setError("Use a password of at least 6 characters.");
       return;
     }
-    setLoading(true);
     try {
       await register(name.trim(), email.trim(), password);
       navigate("/dashboard");
@@ -36,10 +34,8 @@ export default function Register() {
       const detail = formatRegisterError(data);
       setError(detail);
       push({ type: "error", title: "Registration failed", message: detail });
-    } finally {
-      setLoading(false);
     }
-  };
+  });
 
   return (
     <AuthScreen>
@@ -114,10 +110,11 @@ export default function Register() {
             </div>
           )}
 
-          <button className="btn btn-primary w-full" type="submit" disabled={loading}>
-            {loading ? <Loader2 size={16} className="animate-spin" /> : null}
-            {loading ? "Creating account…" : "Create account"}
+          <button className="btn btn-primary w-full" type="submit" disabled={submitting}>
+            {submitting ? <Loader2 size={16} className="animate-spin" /> : null}
+            {submitting ? "Please wait…" : "Create account"}
           </button>
+          {slowHint && <p className="text-xs text-warning-600 -mt-1">Server start ho raha hai, thoda ruko…</p>}
         </form>
 
         <p className="text-sm text-ink-500 mt-5">

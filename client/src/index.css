@@ -157,7 +157,7 @@ a:hover {
     @apply animate-pulse rounded-lg bg-navy-100;
   }
   .sidebar-link {
-    @apply flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-navy-300 hover:bg-navy-800/60 hover:text-white transition-colors;
+    @apply flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-navy-200 hover:bg-navy-800/60 hover:text-white transition-colors;
   }
   .sidebar-link.active {
     @apply bg-brand/15 text-white;

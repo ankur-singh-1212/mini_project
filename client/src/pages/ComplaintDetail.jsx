@@ -12,7 +12,7 @@ import {
   ShieldCheck,
   UserRound,
 } from "lucide-react";
-import api from "../services/api";
+import api, { STATIC_URL } from "../services/api";
 import { useAuth } from "../context/AuthContext";
 import { useSocket } from "../context/SocketContext";
 import { useToast } from "../context/ToastContext";
@@ -23,6 +23,7 @@ import Spinner from "../components/Spinner";
 import Modal from "../components/Modal";
 import EmptyState from "../components/EmptyState";
 import { cn } from "../utils/cn";
+import { useSubmit } from "../hooks/useSubmit";
 
 const CATEGORIES = [
   "Technical Issue",
@@ -138,8 +139,7 @@ export default function ComplaintDetail() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [complaint, user?.role, isAssignedToMe]);
 
-  const sendComment = async (e) => {
-    e.preventDefault();
+  const { submitting: savingComment, slowHint, submit: sendComment } = useSubmit(async () => {
     if (!newComment.trim()) return;
     try {
       await api.post(`/complaints/${id}/comments`, { body: newComment.trim(), isInternal: internal });
@@ -148,9 +148,9 @@ export default function ComplaintDetail() {
     } catch (err) {
       push({ type: "error", title: "Failed", message: err.response?.data?.message });
     }
-  };
+  });
 
-  const applyStatus = async () => {
+  const { submitting: applyingStatus, submit: applyStatus } = useSubmit(async () => {
     if (!newStatus) return;
     try {
       await api.patch(`/complaints/${id}/status`, {
@@ -165,9 +165,9 @@ export default function ComplaintDetail() {
     } catch (err) {
       push({ type: "error", title: "Update failed", message: err.response?.data?.message });
     }
-  };
+  });
 
-  const saveClassification = async () => {
+  const { submitting: savingClassification, submit: saveClassification } = useSubmit(async () => {
     try {
       await api.patch(`/complaints/${id}`, {
         category: overrideCategory,
@@ -179,9 +179,9 @@ export default function ComplaintDetail() {
     } catch (err) {
       push({ type: "error", title: "Update failed", message: err.response?.data?.message });
     }
-  };
+  });
 
-  const saveAssignment = async () => {
+  const { submitting: reassigning, submit: saveAssignment } = useSubmit(async () => {
     if (!overrideAgent) return;
     try {
       await api.post(`/complaints/${id}/assign`, { agentId: overrideAgent });
@@ -190,7 +190,7 @@ export default function ComplaintDetail() {
     } catch (err) {
       push({ type: "error", title: "Reassignment failed", message: err.response?.data?.message });
     }
-  };
+  });
 
   if (loading && !complaint) return <Spinner label="Loading complaint…" />;
   if (!complaint) return null;
@@ -229,7 +229,7 @@ export default function ComplaintDetail() {
                   {c.attachments.map((a, i) => (
                     <a
                       key={i}
-                      href={a.path}
+                      href={a.path.startsWith("http") ? a.path : STATIC_URL + a.path}
                       target="_blank"
                       rel="noreferrer"
                       className="btn btn-secondary text-xs"
@@ -287,8 +287,8 @@ export default function ComplaintDetail() {
                 />
               )}
               <div>
-                <button className="btn btn-primary" disabled={!newStatus} onClick={applyStatus}>
-                  Apply update
+                <button className="btn btn-primary" disabled={!newStatus || applyingStatus} onClick={applyStatus}>
+                  {applyingStatus ? "Please wait…" : "Apply update"}
                 </button>
               </div>
             </div>
@@ -346,10 +346,11 @@ export default function ComplaintDetail() {
                   Internal note (visible to administrators only)
                 </label>
                 <div>
-                  <button type="submit" className="btn btn-primary" disabled={!newComment.trim()}>
-                    <Send size={14} /> Send
+                  <button type="submit" className="btn btn-primary" disabled={!newComment.trim() || savingComment}>
+                    <Send size={14} /> {savingComment ? "Please wait…" : "Send"}
                   </button>
                 </div>
+                {slowHint && <p className="text-xs text-warning-600 mt-1">Server start ho raha hai, thoda ruko…</p>}
               </form>
             )}
           </div>
@@ -442,8 +443,8 @@ export default function ComplaintDetail() {
                   {adminDepartments.map((d) => (<option key={d._id} value={d._id}>{d.name}</option>))}
                 </select>
               </div>
-              <button type="button" className="btn btn-secondary w-full" onClick={saveClassification}>
-                Save classification
+              <button type="button" className="btn btn-secondary w-full" onClick={saveClassification} disabled={savingClassification}>
+                {savingClassification ? "Please wait…" : "Save classification"}
               </button>
               <div className="border-t border-edge pt-4">
                 <label className="label mb-2 block" htmlFor="override-agent">Reassign agent</label>
@@ -451,8 +452,8 @@ export default function ComplaintDetail() {
                   <option value="">Choose an agent</option>
                   {adminAgents.map((a) => (<option key={a._id} value={a._id}>{a.name}</option>))}
                 </select>
-                <button type="button" className="btn btn-primary w-full mt-3" disabled={!overrideAgent} onClick={saveAssignment}>
-                  Reassign
+                <button type="button" className="btn btn-primary w-full mt-3" disabled={!overrideAgent || reassigning} onClick={saveAssignment}>
+                  {reassigning ? "Please wait…" : "Reassign"}
                 </button>
               </div>
             </div>

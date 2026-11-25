@@ -1,6 +1,9 @@
 import axios from "axios";
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5001";
 const api = axios.create({ baseURL: API_URL });
+// Static files (attachments) are served by the backend itself, so the origin
+// of VITE_API_URL without the trailing "/api".
+export const STATIC_URL = API_URL.replace(/\/api$/, "");
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem("token");
   if (token) config.headers.Authorization = `Bearer ${token}`;

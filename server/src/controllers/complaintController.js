@@ -38,6 +38,14 @@ export const createComplaint = async (req, res) => {
   // Only these fields are accepted from the client. Category, priority,
   // department and assignee are always decided on the server.
   const { title, description } = req.body;
+  // Duplicate-submission guard: the same reporter cannot create another
+  // complaint with an identical title within the last 60 seconds.
+  if (await isDuplicateComplaint(req.user._id, title)) {
+    return res.status(400).json({
+      success: false,
+      message: "A similar complaint was already submitted recently. Please try again a little later.",
+    });
+  }
   const text = [title, description].filter(Boolean).join(" ");
 
   const catPred = await predictCategory(text);
@@ -495,3 +503,17 @@ export const aiCategorize = async (req, res) => {
   const prio = predictPriority(text, cat.category);
   res.json({ success: true, prediction: { ...cat, priority: prio.priority, reason: prio.reason, prioritySource: prio.source } });
 };
+
+function escapeRegExp(s) {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+async function isDuplicateComplaint(reporterId, title) {
+  const key = String(title || "").trim().toLowerCase();
+  if (!key) return false;
+  return Complaint.exists({
+    reporter: reporterId,
+    createdAt: { $gte: new Date(Date.now() - 60_000) },
+    title: { $regex: new RegExp(`^${escapeRegExp(key)}$`, "i") },
+  });
+}

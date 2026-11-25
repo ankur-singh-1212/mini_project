@@ -4,25 +4,23 @@ import { Eye, EyeOff, GraduationCap, Loader2, LogIn } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { homePathFor } from "../context/AuthContext";
 import { useToast } from "../context/ToastContext";
+import { useSubmit } from "../hooks/useSubmit";
 
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [show, setShow] = useState(false);
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const { login } = useAuth();
   const { push } = useToast();
   const navigate = useNavigate();
 
-  const submit = async (e) => {
-    e.preventDefault();
+  const { submitting, slowHint, submit } = useSubmit(async () => {
     setError("");
     if (!email.trim() || !password) {
       setError("Enter your college email and password.");
       return;
     }
-    setLoading(true);
     try {
       const user = await login(email.trim(), password);
       push({ type: "success", title: "Welcome back" });
@@ -31,10 +29,8 @@ export default function Login() {
       const msg = err.response?.data?.message || "Sign in failed. Please try again.";
       setError(msg);
       push({ type: "error", title: "Sign in failed", message: msg });
-    } finally {
-      setLoading(false);
     }
-  };
+  });
 
   return (
     <AuthScreen>
@@ -92,10 +88,11 @@ export default function Login() {
             </div>
           )}
 
-          <button className="btn btn-primary w-full" type="submit" disabled={loading}>
-            {loading ? <Loader2 size={16} className="animate-spin" /> : <LogIn size={16} />}
-            {loading ? "Signing in…" : "Sign in"}
+          <button className="btn btn-primary w-full" type="submit" disabled={submitting}>
+            {submitting ? <Loader2 size={16} className="animate-spin" /> : <LogIn size={16} />}
+            {submitting ? "Please wait…" : "Sign in"}
           </button>
+          {slowHint && <p className="text-xs text-warning-600 -mt-1">Server start ho raha hai, thoda ruko…</p>}
         </form>
 
         <p className="text-sm text-ink-500 mt-5">

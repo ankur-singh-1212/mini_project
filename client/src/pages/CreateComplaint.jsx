@@ -3,41 +3,29 @@ import { Link, useNavigate } from "react-router-dom";
 import { ImagePlus, Loader2, Send } from "lucide-react";
 import api from "../services/api";
 import { useToast } from "../context/ToastContext";
+import { useSubmit } from "../hooks/useSubmit";
 import PageHeader from "../components/PageHeader";
 
 export default function CreateComplaint() {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [files, setFiles] = useState([]);
-  const [submitting, setSubmitting] = useState(false);
   const { push } = useToast();
   const navigate = useNavigate();
 
-  const submit = async (e) => {
-    e.preventDefault();
-    setSubmitting(true);
-    try {
-      const fd = new FormData();
-      fd.append("title", title.trim());
-      fd.append("description", description.trim());
-      files.forEach((f) => fd.append("attachments", f));
-      const r = await api.post("/complaints", fd, { headers: { "Content-Type": "multipart/form-data" } });
-      push({
-        type: "success",
-        title: "Complaint submitted",
-        message: `${r.data.complaint.complaintId} has been received.`,
-      });
-      navigate(`/complaints/${r.data.complaint._id}`);
-    } catch (err) {
-      push({
-        type: "error",
-        title: "Submission failed",
-        message: err.response?.data?.message || "Please try again.",
-      });
-    } finally {
-      setSubmitting(false);
-    }
-  };
+  const { submitting, slowHint, submit } = useSubmit(async () => {
+    const fd = new FormData();
+    fd.append("title", title.trim());
+    fd.append("description", description.trim());
+    files.forEach((f) => fd.append("attachments", f));
+    const r = await api.post("/complaints", fd, { headers: { "Content-Type": "multipart/form-data" } });
+    push({
+      type: "success",
+      title: "Complaint submitted",
+      message: `${r.data.complaint.complaintId} has been received.`,
+    });
+    navigate(`/complaints/${r.data.complaint._id}`);
+  });
 
   return (
     <div className="page">
@@ -128,10 +116,11 @@ export default function CreateComplaint() {
           <div className="flex flex-wrap gap-3 pt-2 border-t border-edge">
             <button className="btn btn-primary" type="submit" disabled={submitting}>
               {submitting ? <Loader2 size={16} className="animate-spin" /> : <Send size={15} />}
-              {submitting ? "Submitting…" : "Submit complaint"}
+              {submitting ? "Please wait…" : "Submit complaint"}
             </button>
             <Link to="/dashboard" className="btn btn-secondary">Cancel</Link>
           </div>
+          {slowHint && <p className="text-xs text-warning-600">Server start ho raha hai, thoda ruko…</p>}
         </div>
       </form>
     </div>
