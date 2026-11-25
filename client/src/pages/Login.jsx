@@ -5,12 +5,6 @@ import { useAuth } from "../context/AuthContext";
 import { homePathFor } from "../context/AuthContext";
 import { useToast } from "../context/ToastContext";
 
-const DEMO_ACCOUNTS = [
-  { email: "admin@nexaresolve.dev", password: "Password123!", role: "Administrator" },
-  { email: "agent1@nexaresolve.dev", password: "Password123!", role: "Agent" },
-  { email: "user1@nexaresolve.dev", password: "Password123!", role: "Student" },
-];
-
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -108,27 +102,6 @@ export default function Login() {
           New to NexaResolve?{" "}
           <Link to="/register" className="text-brand font-medium">Create an account</Link>
         </p>
-      </div>
-
-      <div className="card p-5 mt-6">
-        <div className="label mb-3">Demo accounts</div>
-        <div className="space-y-2">
-          {DEMO_ACCOUNTS.map((d) => (
-            <button
-              key={d.email}
-              type="button"
-              className="w-full text-left rounded-lg border border-edge px-3 py-2 hover:bg-canvas transition-colors"
-              onClick={() => {
-                setEmail(d.email);
-                setPassword(d.password);
-                setError("");
-              }}
-            >
-              <div className="text-sm font-medium text-ink-900">{d.role}</div>
-              <div className="text-xs text-ink-500">{d.email}</div>
-            </button>
-          ))}
-        </div>
       </div>
     </AuthScreen>
   );
