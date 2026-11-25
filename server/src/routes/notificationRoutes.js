@@ -1,0 +1,10 @@
+import express from "express";
+import { requireAuth } from "../middleware/auth.js";
+import { asyncHandler } from "../utils/asyncHandler.js";
+import * as N from "../controllers/notificationController.js";
+const router = express.Router();
+router.use(requireAuth);
+router.get("/", asyncHandler(N.listNotifications));
+router.patch("/:id/read", asyncHandler(N.markRead));
+router.patch("/read-all", asyncHandler(N.markAllRead));
+export default router;
